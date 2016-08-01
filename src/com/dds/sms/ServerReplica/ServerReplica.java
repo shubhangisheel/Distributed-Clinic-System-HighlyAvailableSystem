@@ -19,22 +19,22 @@ public class ServerReplica {
 	private ClinicServer serverObjects[];
 	private FIFO fifoObj;
 	Request reqObj;
-	
-	public ServerReplica(int myReplicaPort, int replicaPorts[], int serverPorts[], FIFO fifoObj){
+
+	public ServerReplica(int myReplicaPort, int replicaPorts[], ClinicServer serverObjects[], FIFO fifoObj){
 		this.myReplicaPort = myReplicaPort;
 		this.replicaPorts = new int[replicaPorts.length];
-		this.serverObjects =  new ClinicServer();
-		
+		this.serverObjects = new ClinicServer[serverObjects.length];
+
 		for(int i =0; i<replicaPorts.length; i++){
 			this.replicaPorts[i] = replicaPorts[i];
 		}
-		
-		for(int j =0; j<serverPorts.length; j++){
-			this.serverPorts[j] = serverPorts[j];
+
+		for(int j =0; j<serverObjects.length; j++){
+			this.serverObjects[j] = serverObjects[j];
 		}
-		
+
 		this.fifoObj = fifoObj;
-		
+
 		try {
 			replicaSocket = new DatagramSocket(myReplicaPort);
 		} catch (SocketException e) {
@@ -44,14 +44,36 @@ public class ServerReplica {
 	}
 
 	public ClinicServer getClinicObject(String location){
-		
+
 		for(int i =0; i<serverObjects.length; i++){
 			if(serverObjects[i].getLocation().equals(location))
 				return serverObjects[i];
 		}
 		return null;
 	}
-	
+
+	public void listen(){
+		DatagramPacket requestPacket = null;
+		ServerReplicaHelper serverReplicaHelperObj = null;
+
+		while(true){
+			byte[] buf = new byte[256];
+			requestPacket = new DatagramPacket(buf, buf.length);
+
+			try {
+				replicaSocket.receive(requestPacket);
+
+				serverReplicaHelperObj = new ServerReplicaHelper(this,requestPacket);
+				Thread thread  = new Thread(serverReplicaHelperObj); 
+				thread.start();
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public ClinicServer[] getServerObjects() {
 		return serverObjects;
 	}
@@ -98,20 +120,6 @@ public class ServerReplica {
 		this.replicaPorts = replicaPorts;
 	}
 
-
-
-	public int[] getServerPorts() {
-		return serverPorts;
-	}
-
-
-
-	public void setServerPorts(int[] serverPorts) {
-		this.serverPorts = serverPorts;
-	}
-
-
-
 	public FIFO getFifoObj() {
 		return fifoObj;
 	}
@@ -151,34 +159,7 @@ public class ServerReplica {
 	public void setGroupLeader(boolean groupLeader) {
 		GroupLeader = groupLeader;
 	}
-	
-
-	public void listen(){
-		DatagramPacket requestPacket = null;
-		ServerReplicaHelper serverReplicaHelperObj = null;
-		
-		while(true){
-			byte[] buf = new byte[256];
-			requestPacket = new DatagramPacket(buf, buf.length);
-			
-			try {
-				replicaSocket.receive(requestPacket);
-				
-				serverReplicaHelperObj = new ServerReplicaHelper(this,requestPacket);
-				Thread thread  = new Thread(serverReplicaHelperObj); 
-				thread.start();
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
-	}
 
 
-	
-	
-	
 
 }

@@ -10,7 +10,15 @@ public class Response implements Serializable{
 	private boolean recordEdited;
 	private boolean recordTransfered;
 	private int getCount;
+	private String methodName;
 	
+	
+	public String getMethodName() {
+		return methodName;
+	}
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+	}
 	public boolean isDoctorAdded() {
 		return doctorAdded;
 	}
