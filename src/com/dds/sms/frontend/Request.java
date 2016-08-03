@@ -22,7 +22,9 @@ public class Request implements Serializable{
 	private String managerID;
 	private String clinicLocation;
 	
-	public Request(String methodName, String fName, String lName, String add, String phn, String spclztn, String loc, String clinicLocation){
+	
+	public Request(int RequestID,String methodName, String fName, String lName, String add, String phn, String spclztn, String loc, String clinicLocation){
+		this.RequestID = RequestID;
 		this.firstName = fName;
 		this.lastName = lName;
 		this.address = add;
@@ -33,7 +35,8 @@ public class Request implements Serializable{
 		this.clinicLocation = clinicLocation;
 	}
 	
-	public Request(String methodName,String fName, String lName, String desig,String stat_Date, String stat, String clinicLocation){
+	public Request(int RequestID,String methodName,String fName, String lName, String desig,String stat_Date, String stat, String clinicLocation){
+		this.RequestID = RequestID;
 		this.firstName =fName;
 		this.lastName = lName;
 		this.designation = desig;
@@ -43,7 +46,8 @@ public class Request implements Serializable{
 		this.clinicLocation = clinicLocation;
 	}
 	
-	public Request (String methodName,String recordID, String fieldName, String newValue, String clinicLocation){
+	public Request (int RequestID,String methodName,String recordID, String fieldName, String newValue, String clinicLocation){
+		this.RequestID = RequestID;
 		this.recordID = recordID;
 		this.fieldName = fieldName;
 		this.newValue = newValue;
@@ -51,7 +55,8 @@ public class Request implements Serializable{
 		this.clinicLocation = clinicLocation;
 	}
 	
-	public Request (String methodName,String recordType, String clinicLocation){
+	public Request (int RequestID,String methodName,String recordType, String clinicLocation){
+		this.RequestID = RequestID;
 		this.recordType = recordType;
 		this.methodName = methodName;
 		this.clinicLocation = clinicLocation;
@@ -173,6 +178,8 @@ public class Request implements Serializable{
 	public void setClinicLocation(String clinicLocation) {
 		this.clinicLocation = clinicLocation;
 	}
+	
+	
 	
 	
 	

@@ -72,7 +72,7 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 		String fileName = location + "_log" + ".txt" ;
 		try {
 			logFile = new FileWriter ( fileName ) ;
-			logFile.write(message + System.lineSeparator());
+			logFile.write(message + "\n");
 			logFile.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -464,7 +464,7 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 
 	public synchronized void writeLog ( FileWriter obj, String message ) {
 		try {
-			obj.write( message + System.lineSeparator() ) ;
+			obj.write( message + "\n" ) ;
 			obj.flush();
 		} catch ( IOException e ) {
 			System.out.println( "Could not write the following string to log for " + location + " " + e.getMessage() ) ;

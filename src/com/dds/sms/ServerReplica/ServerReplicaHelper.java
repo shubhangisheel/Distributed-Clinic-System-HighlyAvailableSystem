@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import com.dds.sms.dummy.FIFO;
 import com.dds.sms.frontend.Request;
@@ -44,16 +46,44 @@ public class ServerReplicaHelper implements Runnable{
 	public void run(){
 
 		if(serverReplicaObj.isGroupLeader()){
-			groupLeaderTask();
+			groupLeaderCrashHandle();
 		}
 		else{
 			nonGroupLeaderTask();
 		}
 	}
 
+	/*function to handle group leader crash*/
+	public void groupLeaderCrashHandle(){
+		ByteArrayInputStream bs = null;
+		ObjectInputStream in =  null;
+
+		if(serverReplicaObj.isCrashed()){
+
+			try {
+				bs = new ByteArrayInputStream(requestPacket.getData());
+				in = new ObjectInputStream(bs);
+
+				Queue bufferList = new LinkedList();
+				bufferList = (Queue) in.readObject();
+
+				for(Object reqObj : bufferList){
+					groupLeaderTask(reqObj);
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 
 	/*function for Group Leader Task*/
-	public void groupLeaderTask(){
+	public void groupLeaderTask(Object reqObj){
 		Response responseObj[] = null;
 
 		Response[] responseOtherSR = sendAndRecieveOtherReplicas();
@@ -311,31 +341,27 @@ public class ServerReplicaHelper implements Runnable{
 			responseObj.setMethodName("createDRecord");
 			responseObj.setDoctorAdded(serverObj.createDRecord(reqObj.getFirstName(), reqObj.getLastName(), reqObj.getAddress(), reqObj.getPhone(), reqObj.getSpecialization(), reqObj.getLocation()));
 			return responseObj;
-			break;
+
 		}
 		case "createNRecord":{
 			responseObj.setMethodName("createNRecord");
 			responseObj.setNurseAdded(serverObj.createNRecord(reqObj.getFirstName(), reqObj.getLastName(), reqObj.getDesignation(), reqObj.getStatus_Date(), reqObj.getStatus()));
 			return responseObj;
-			break;
 		}
 		case "editRecord":{
 			responseObj.setMethodName("editRecord");
 			responseObj.setRecordEdited(serverObj.editRecord(reqObj.getRecordID(), reqObj.getFieldName(), reqObj.getNewValue()));
 			return responseObj;
-			break;
 		}
 		case "getCount":{
 			responseObj.setMethodName("getCount");
 			responseObj.setGetCount(serverObj.getCount(reqObj.getRecordType()));
 			return responseObj;
-			break;
 		}
 		case "transferRecord":{
 			responseObj.setMethodName("transferRecord");
 			responseObj.setRecordTransfered(serverObj.transferRecord(reqObj.getManagerID(), reqObj.getRecordID(), reqObj.getLocation()));
 			return responseObj;
-			break;
 		}
 		default :{
 			System.out.println("This is default");

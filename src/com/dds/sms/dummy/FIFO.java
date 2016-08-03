@@ -14,6 +14,10 @@ public class FIFO implements Runnable {
 		this.RequestPacket = RequestPacket;
 		response = new Response[2];
 	}
+	
+	public FIFO(){
+	}
+	
 	public void broadcast(DatagramPacket requestPacket){
 	}
 	

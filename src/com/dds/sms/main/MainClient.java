@@ -6,7 +6,6 @@ import org.omg.CORBA.ORB;
 import org.omg.CosNaming.NamingContextExt;
 import org.omg.CosNaming.NamingContextExtHelper;
 
-import com.dds.sms.client.ManagerClient;
 
 public class MainClient {
 
@@ -32,10 +31,10 @@ public class MainClient {
 		}
 	
 		/*Creating Manager Client object threads to call its getMenu()*/
-		ManagerClient a = new ManagerClient(ncRef);
+		//ManagerClient a = new ManagerClient(ncRef);
 
 		for(int i = 1; i<10; i++){
-			Thread clientThread = new Thread(a);
+			Thread clientThread = new Thread();
 			clientThread.start();
 		}
 	}

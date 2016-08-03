@@ -9,10 +9,11 @@ import com.dds.sms.dummy.FIFO;
 import com.dds.sms.frontend.Request;
 import com.dds.sms.server.ClinicServer;
 
-public class ServerReplica {
+public class ServerReplica implements Runnable{
 
 	private int RequestID;
 	private boolean GroupLeader;
+	private boolean Crashed;
 	private DatagramSocket replicaSocket;
 	private int myReplicaPort;
 	private int replicaPorts[];
@@ -43,6 +44,9 @@ public class ServerReplica {
 		}
 	}
 
+	public void run(){
+		listen();
+	}
 	public ClinicServer getClinicObject(String location){
 
 		for(int i =0; i<serverObjects.length; i++){
@@ -160,6 +164,14 @@ public class ServerReplica {
 		GroupLeader = groupLeader;
 	}
 
+	public boolean isCrashed() {
+		return Crashed;
+	}
 
+	public void setCrashed(boolean crashed) {
+		Crashed = crashed;
+	}
+
+	
 
 }
