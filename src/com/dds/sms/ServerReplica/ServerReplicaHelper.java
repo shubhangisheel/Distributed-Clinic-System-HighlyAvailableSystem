@@ -90,27 +90,40 @@ public class ServerReplicaHelper implements Runnable{
 				e.printStackTrace();
 			}
 		}
+		groupLeaderTask(reqObj);
 	}
 
 
 	/*function for Group Leader Task*/
 	public void groupLeaderTask(Request reqObj){
+		System.out.println("Debug: In SRH groupLeaderTask : Reuqest object id and firstname and lastname : "+reqObj.getRequestID() + " "+ reqObj.getFirstName()+" "+reqObj.getLastName());
 		Response responseObj[] = null;
 
-		Response responseOtherSR = sendAndRecieveOtherReplicas();
-		if(responseOtherSR==null){
-			System.out.println("Debug: In group leader task: responseOtherSR array object received is NULL");
-		}
+		/*Debug:  Commenting OTherSR code */
+//		Response responseOtherSR = sendAndRecieveOtherReplicas();
+//		if(responseOtherSR==null){
+//			System.out.println("Debug: In group leader task: responseOtherSR array object received is NULL");
+//		}
+		/*Comments ends here*/
+		
 		Response myLocationResponse = MyLocationServers(reqObj);
 
-		if(myLocationResponse!= null && responseOtherSR!= null){
-			Response finalResponse = majorityResponse(responseOtherSR, myLocationResponse);
-			sendToFrontEnd(finalResponse);
-		}
-		else {
-			System.out.println("Debug: In group leader task: myLocationResponse object received is NULL");
-		}
+		/*Debug:  Commenting OTherSR code */
+//		if(myLocationResponse!= null && responseOtherSR!= null){
+//			Response finalResponse = majorityResponse(responseOtherSR, myLocationResponse);
+//			sendToFrontEnd(finalResponse);
+//		}
+//		
+//		else {
+//			System.out.println("Debug: In group leader task: myLocationResponse object received is NULL");
+//		}
+		/*Comments ends here*/
+		
+		/*Debug: added for debugging myLocResponse */
+		sendToFrontEnd(myLocationResponse);
+		
 	}
+	
 
 	/*function for Group Leader to send serialized packet to other 2 server replicas using FIFO*/	
 	public Response sendAndRecieveOtherReplicas(){
@@ -126,14 +139,15 @@ public class ServerReplicaHelper implements Runnable{
 
 	/*function for Group Leader Process to send request to its own server*/
 	public Response MyLocationServers(Request reqObj){
-
+		System.out.println("Debug: In Myloci , Reuqest object id and firstname and lastname : "+reqObj.getRequestID() + " "+ reqObj.getFirstName()+" "+reqObj.getLastName());
 		Response responseObj = null;
 
 		/*Sending packet to its own location server*/
 		clinicLocation = reqObj.getClinicLocation();
+		System.out.println("Debug: cliniclocation "+clinicLocation);
 
 		/*to check whether the req is processed before or not*/
-		if(!(reqObj.getRequestID() < serverReplicaObj.lastProcessed)){
+		if(!(reqObj.getRequestID() <= serverReplicaObj.lastProcessed)){
 
 			/*Loop to check location of server*/
 			if(clinicLocation.equals("MTL")){
@@ -349,8 +363,8 @@ public class ServerReplicaHelper implements Runnable{
 
 	/*function to resolve request using deserialized request object and ClinicServer object*/
 	public Response resolveRequest(Request reqObj, ClinicServer serverObj){
-
-		Response responseObj = null;
+		System.out.println("Debug: In resolveRequest");
+		Response responseObj = new Response();
 		String methodName = reqObj.getMethodName();
 		
 		switchFunc switchFuncObj = switchFunc.valueOf(methodName);

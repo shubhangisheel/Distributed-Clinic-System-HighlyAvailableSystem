@@ -27,8 +27,10 @@ public class ServerReplica implements Runnable{
 		this.replicaPorts = new int[replicaPorts.length];
 		this.serverObjects = new ClinicServer[serverObjects.length];
 		lastProcessed = 0;
-
+		
 		/*Debug: in ServerReplica ctor */
+		setGroupLeader(true);
+		setCrashed(false);
 		System.out.println("Debug: In ServerReplica ctor myReplicaPort: "+ myReplicaPort);
 		
 		for(int i =0; i<replicaPorts.length; i++){

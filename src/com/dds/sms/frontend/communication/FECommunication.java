@@ -3,6 +3,7 @@ package com.dds.sms.frontend.communication;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -88,10 +89,9 @@ public class FECommunication {
 
 	public Response recieve(){
 
-
-		byte[] recieveBuf = new byte[256];
+		byte[] recieveBuf = new byte[3000];
 		ByteArrayInputStream bs = null;
-		ObjectInputStream in =  null;
+		ObjectInput in =  null;
 		Response responseObj = null;
 
 		DatagramPacket responsePacket = new DatagramPacket(recieveBuf, recieveBuf.length);
