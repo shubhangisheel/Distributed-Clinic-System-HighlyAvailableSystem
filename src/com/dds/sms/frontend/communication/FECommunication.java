@@ -28,11 +28,11 @@ public class FECommunication {
 	private DatagramSocket socket;
 	
 	/*Storing the last fifty reqObj in a list to maintain high availability*/
-	public static Queue bufferList;
+	public static Queue<Request> bufferList;
 
 	public FECommunication(Request reqObj){
 		this.reqObj = reqObj;
-		bufferList = new LinkedList();
+		bufferList = new LinkedList<Request>();
 		try {
 			socket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -90,15 +90,19 @@ public class FECommunication {
 	public Response recieve(){
 
 		byte[] recieveBuf = new byte[3000];
-		ByteArrayInputStream bs = null;
-		ObjectInput in =  null;
+	//	ByteArrayInputStream bs = null;
+		//ObjectInputStream in =  null;
 		Response responseObj = null;
 
+		/*Debug: print add and port of req pakcet*/
+		System.out.println("Debug: FE communication req add :"+ socket.getLocalPort()+" and add "+socket.getLocalAddress());
+		
 		DatagramPacket responsePacket = new DatagramPacket(recieveBuf, recieveBuf.length);
 		try {
+	
 			socket.receive(responsePacket);
-			bs = new ByteArrayInputStream(responsePacket.getData());
-			in = new ObjectInputStream(bs);
+			ByteArrayInputStream bs = new ByteArrayInputStream(responsePacket.getData());
+			ObjectInputStream in = new ObjectInputStream(bs);
 			responseObj = (Response)in.readObject();
 
 

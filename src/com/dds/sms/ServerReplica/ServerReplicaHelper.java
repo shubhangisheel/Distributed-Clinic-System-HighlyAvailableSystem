@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -288,20 +289,24 @@ public class ServerReplicaHelper implements Runnable{
 
 	/*function to serialize final response and send it to front end */
 	public void sendToFrontEnd(Response finalResponse){
-		ByteArrayOutputStream bs = null;
-		ObjectOutputStream os = null;
-		DatagramSocket socket = null;
+		
 
 
 		try {
-			bs = new ByteArrayOutputStream();
-			os = new ObjectOutputStream(bs);
-			socket = new DatagramSocket();
-
+			ByteArrayOutputStream bs = new ByteArrayOutputStream();
+			ObjectOutputStream os = new ObjectOutputStream(bs);
+			
 			os.writeObject(finalResponse);
 
-			byte[] buf = new byte[256];
+			os.close();
+			bs.close();
+			DatagramSocket socket = new DatagramSocket();
+
+			
+			byte[] buf = bs.toByteArray();
 			DatagramPacket finalResponsePacket = new DatagramPacket(buf, buf.length, requestPacket.getAddress(), requestPacket.getPort());
+			/*Debug: print add and port of req pakcet*/
+			System.out.println("Debug: req add :"+ InetAddress.getLocalHost() +" and port "+requestPacket.getPort());
 			socket.send(finalResponsePacket);
 
 		} catch (IOException e) {
