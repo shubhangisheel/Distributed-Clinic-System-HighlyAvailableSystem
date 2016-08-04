@@ -3,6 +3,7 @@ package com.dds.sms.ServerReplica;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
@@ -22,17 +23,25 @@ public class ServerReplicaHelper implements Runnable{
 	private Request reqObj;
 	private String clinicLocation;
 
+	/*ENUM*/
+	private enum switchFunc{
+		createDRecord, createNRecord, editRecord,getCount, transferRecord  
+	}
+
 	public ServerReplicaHelper(ServerReplica serverReplicaObj, DatagramPacket requestPacket){
 		this.requestPacket = requestPacket;
 		this.serverReplicaObj = serverReplicaObj;
 
 		ByteArrayInputStream bs = null;
-		ObjectInputStream is = null;
-
-		bs = new ByteArrayInputStream(requestPacket.getData());
+		ObjectInput is = null;
+		
+		byte[] b = requestPacket.getData();
+		bs = new ByteArrayInputStream(b);
 		try {
 			is = new ObjectInputStream(bs);
+			System.out.println("In SRH ctor requestpacket: "+ requestPacket);
 			reqObj = (Request)is.readObject();
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,9 +55,11 @@ public class ServerReplicaHelper implements Runnable{
 	public void run(){
 
 		if(serverReplicaObj.isGroupLeader()){
+			System.out.println("Debug: In run of SRH: GroupLEader");
 			groupLeaderCrashHandle();
 		}
 		else{
+			System.out.println("Debug: In run of SRH: Non-GroupLEader");
 			nonGroupLeaderTask();
 		}
 	}
@@ -68,7 +79,7 @@ public class ServerReplicaHelper implements Runnable{
 				bufferList = (Queue) in.readObject();
 
 				for(Object reqObj : bufferList){
-					groupLeaderTask(reqObj);
+					groupLeaderTask((Request)reqObj);
 				}
 
 			} catch (IOException e) {
@@ -83,14 +94,14 @@ public class ServerReplicaHelper implements Runnable{
 
 
 	/*function for Group Leader Task*/
-	public void groupLeaderTask(Object reqObj){
+	public void groupLeaderTask(Request reqObj){
 		Response responseObj[] = null;
 
-		Response[] responseOtherSR = sendAndRecieveOtherReplicas();
+		Response responseOtherSR = sendAndRecieveOtherReplicas();
 		if(responseOtherSR==null){
 			System.out.println("Debug: In group leader task: responseOtherSR array object received is NULL");
 		}
-		Response myLocationResponse = MyLocationServers();
+		Response myLocationResponse = MyLocationServers(reqObj);
 
 		if(myLocationResponse!= null && responseOtherSR!= null){
 			Response finalResponse = majorityResponse(responseOtherSR, myLocationResponse);
@@ -102,156 +113,161 @@ public class ServerReplicaHelper implements Runnable{
 	}
 
 	/*function for Group Leader to send serialized packet to other 2 server replicas using FIFO*/	
-	public Response[] sendAndRecieveOtherReplicas(){
+	public Response sendAndRecieveOtherReplicas(){
 
 		/*Creating FIFO object to broadcast it to other server replicas*/
 		FIFO fifoObj = serverReplicaObj.getFifoObj();
 		Thread threadFifo = new Thread(fifoObj);
 		threadFifo.start();
-		Response response[] = fifoObj.getResponse();
+		Response response = fifoObj.getResponse();
 		return response;
 
 	}
 
 	/*function for Group Leader Process to send request to its own server*/
-	public Response MyLocationServers(){
+	public Response MyLocationServers(Request reqObj){
 
 		Response responseObj = null;
 
 		/*Sending packet to its own location server*/
 		clinicLocation = reqObj.getClinicLocation();
 
-		/*Loop to check location of server*/
-		if(clinicLocation.equals("MTL")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("MTL"));
-		}
-		else if(clinicLocation.equals("LVL")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("LVL"));
-		}
-		else if(clinicLocation.equals("DDO")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("DDO"));
-		}
+		/*to check whether the req is processed before or not*/
+		if(!(reqObj.getRequestID() < serverReplicaObj.lastProcessed)){
 
+			/*Loop to check location of server*/
+			if(clinicLocation.equals("MTL")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("MTL"));
+			}
+			else if(clinicLocation.equals("LVL")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("LVL"));
+			}
+			else if(clinicLocation.equals("DDO")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("DDO"));
+			}
+			serverReplicaObj.lastProcessed++;
+
+		}
 		return responseObj;
 	}
 
 
 	/*function to return majority value*/
-	public Response majorityResponse(Response[] responseOtherSR, Response myLocationResponse){
+	public Response majorityResponse(Response responseOtherSR, Response myLocationResponse){
 		int countTrue = 0;
 
 		Response finalResponse = new Response();
 
 		/*Switch case to decide majority response for all five functions */
-		switch(myLocationResponse.getMethodName()){
-
-		case "createDRecord":{
-			/*checking value from Server Replicas and incrementing counter if true*/
-			for(int i=0; i<responseOtherSR.length;i++){
-				if(responseOtherSR[i].isDoctorAdded()){
-					countTrue++;
-				}
-			}
-			/*checking value of my location server*/
-			if(myLocationResponse.isDoctorAdded()){
-				countTrue++;
-			}
-
-			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
-			if(countTrue>=2){
-				finalResponse.setDoctorAdded(true);
-			}
-			else{
-				finalResponse.setDoctorAdded(false);
-			}
-			break;
-		}
-
-		case "createNRecord":{
-			/*checking value from Server Replicas and incrementing counter if true*/
-			for(int i=0; i<responseOtherSR.length;i++){
-				if(responseOtherSR[i].isNurseAdded()){
-					countTrue++;
-				}
-			}
-			/*checking value of my location server*/
-			if(myLocationResponse.isNurseAdded()){
-				countTrue++;
-			}
-
-			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
-			if(countTrue>=2){
-				finalResponse.setNurseAdded(true);
-			}
-			else{
-				finalResponse.setNurseAdded(false);
-			}
-			break;
-		}
-
-		case "editRecord":{
-			/*checking value from Server Replicas and incrementing counter if true*/
-			for(int i=0; i<responseOtherSR.length;i++){
-				if(responseOtherSR[i].isRecordEdited()){
-					countTrue++;
-				}
-			}
-			/*checking value of my location server*/
-			if(myLocationResponse.isRecordEdited()){
-				countTrue++;
-			}
-
-			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
-			if(countTrue>=2){
-				finalResponse.setRecordEdited(true);
-			}
-			else{
-				finalResponse.setRecordEdited(false);
-			}
-			break;
-		}
-
-		case "getCount":{
-
-			if(responseOtherSR[0].getGetCount() == responseOtherSR[1].getGetCount()){
-				finalResponse.setGetCount(responseOtherSR[0].getGetCount());
-			}
-			else if(responseOtherSR[1].getGetCount() == myLocationResponse.getGetCount()){
-				finalResponse.setGetCount(responseOtherSR[1].getGetCount());
-			}
-			else if (myLocationResponse.getGetCount() == responseOtherSR[0].getGetCount()){
-				finalResponse.setGetCount(responseOtherSR[0].getGetCount());
-			}
-			else{
-				System.out.println("Response not recieved correctly : Try again!");
-			}
-			break;
-
-		}
-
-		case "transferRecord":{
-
-			/*checking value from Server Replicas and incrementing counter if true*/
-			for(int i=0; i<responseOtherSR.length;i++){
-				if(responseOtherSR[i].isRecordTransfered()){
-					countTrue++;
-				}
-			}
-			/*checking value of my location server*/
-			if(myLocationResponse.isRecordTransfered()){
-				countTrue++;
-			}
-
-			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
-			if(countTrue>=2){
-				finalResponse.setRecordTransfered(true);
-			}
-			else{
-				finalResponse.setRecordTransfered(false);
-			}
-			break;
-		}
-		}
+//		switch(myLocationResponse.getMethodName()){
+//
+//		case "createDRecord":{
+//			/*checking value from Server Replicas and incrementing counter if true*/
+//			for(int i=0; i<responseOtherSR.length;i++){
+//				if(responseOtherSR[i].isDoctorAdded()){
+//					countTrue++;
+//				}
+//			}
+//			/*checking value of my location server*/
+//			if(myLocationResponse.isDoctorAdded()){
+//				countTrue++;
+//			}
+//
+//			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
+//			if(countTrue>=2){
+//				finalResponse.setDoctorAdded(true);
+//			}
+//			else{
+//				finalResponse.setDoctorAdded(false);
+//			}
+//			break;
+//		}
+//
+//		case "createNRecord":{
+//			/*checking value from Server Replicas and incrementing counter if true*/
+//			for(int i=0; i<responseOtherSR.length;i++){
+//				if(responseOtherSR[i].isNurseAdded()){
+//					countTrue++;
+//				}
+//			}
+//			/*checking value of my location server*/
+//			if(myLocationResponse.isNurseAdded()){
+//				countTrue++;
+//			}
+//
+//			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
+//			if(countTrue>=2){
+//				finalResponse.setNurseAdded(true);
+//			}
+//			else{
+//				finalResponse.setNurseAdded(false);
+//			}
+//			break;
+//		}
+//
+//		case "editRecord":{
+//			/*checking value from Server Replicas and incrementing counter if true*/
+//			for(int i=0; i<responseOtherSR.length;i++){
+//				if(responseOtherSR[i].isRecordEdited()){
+//					countTrue++;
+//				}
+//			}
+//			/*checking value of my location server*/
+//			if(myLocationResponse.isRecordEdited()){
+//				countTrue++;
+//			}
+//
+//			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
+//			if(countTrue>=2){
+//				finalResponse.setRecordEdited(true);
+//			}
+//			else{
+//				finalResponse.setRecordEdited(false);
+//			}
+//			break;
+//		}
+//
+//		case "getCount":{
+//
+//			if(responseOtherSR[0].getGetCount() == responseOtherSR[1].getGetCount()){
+//				finalResponse.setGetCount(responseOtherSR[0].getGetCount());
+//			}
+//			else if(responseOtherSR[1].getGetCount() == myLocationResponse.getGetCount()){
+//				finalResponse.setGetCount(responseOtherSR[1].getGetCount());
+//			}
+//			else if (myLocationResponse.getGetCount() == responseOtherSR[0].getGetCount()){
+//				finalResponse.setGetCount(responseOtherSR[0].getGetCount());
+//			}
+//			else{
+//				System.out.println("Response not recieved correctly : Try again!");
+//			}
+//			break;
+//
+//		}
+//
+//		case "transferRecord":{
+//
+//			/*checking value from Server Replicas and incrementing counter if true*/
+//			for(int i=0; i<responseOtherSR.length;i++){
+//				if(responseOtherSR[i].isRecordTransfered()){
+//					countTrue++;
+//				}
+//			}
+//			/*checking value of my location server*/
+//			if(myLocationResponse.isRecordTransfered()){
+//				countTrue++;
+//			}
+//
+//			/*if count is greater than or equal to 2, true is returned from 2 or more servers*/
+//			if(countTrue>=2){
+//				finalResponse.setRecordTransfered(true);
+//			}
+//			else{
+//				finalResponse.setRecordTransfered(false);
+//			}
+//			break;
+//		}
+//		}
 
 		return finalResponse;
 	}
@@ -288,17 +304,19 @@ public class ServerReplicaHelper implements Runnable{
 		/*Sending packet to its own location server*/
 		clinicLocation = reqObj.getClinicLocation();
 
-		/*Loop to check location of server*/
-		if(clinicLocation.equals("MTL")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("MTL"));
+		if(reqObj.getRequestID()>serverReplicaObj.lastProcessed){
+			/*Loop to check location of server*/
+			if(clinicLocation.equals("MTL")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("MTL"));
+			}
+			else if(clinicLocation.equals("LVL")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("LVL"));
+			}
+			else if(clinicLocation.equals("DDO")){
+				responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("DDO"));
+			}
+			serverReplicaObj.lastProcessed++;
 		}
-		else if(clinicLocation.equals("LVL")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("LVL"));
-		}
-		else if(clinicLocation.equals("DDO")){
-			responseObj = resolveRequest(reqObj, serverReplicaObj.getClinicObject("DDO"));
-		}
-
 		sendToGroupLeader(responseObj);
 
 	}
@@ -334,31 +352,33 @@ public class ServerReplicaHelper implements Runnable{
 
 		Response responseObj = null;
 		String methodName = reqObj.getMethodName();
+		
+		switchFunc switchFuncObj = switchFunc.valueOf(methodName);
+		
+		switch(switchFuncObj){
 
-		switch(methodName){
-
-		case "createDRecord": {
+		case createDRecord: {
 			responseObj.setMethodName("createDRecord");
 			responseObj.setDoctorAdded(serverObj.createDRecord(reqObj.getFirstName(), reqObj.getLastName(), reqObj.getAddress(), reqObj.getPhone(), reqObj.getSpecialization(), reqObj.getLocation()));
 			return responseObj;
 
 		}
-		case "createNRecord":{
+		case createNRecord:{
 			responseObj.setMethodName("createNRecord");
 			responseObj.setNurseAdded(serverObj.createNRecord(reqObj.getFirstName(), reqObj.getLastName(), reqObj.getDesignation(), reqObj.getStatus_Date(), reqObj.getStatus()));
 			return responseObj;
 		}
-		case "editRecord":{
+		case editRecord:{
 			responseObj.setMethodName("editRecord");
 			responseObj.setRecordEdited(serverObj.editRecord(reqObj.getRecordID(), reqObj.getFieldName(), reqObj.getNewValue()));
 			return responseObj;
 		}
-		case "getCount":{
+		case getCount:{
 			responseObj.setMethodName("getCount");
 			responseObj.setGetCount(serverObj.getCount(reqObj.getRecordType()));
 			return responseObj;
 		}
-		case "transferRecord":{
+		case transferRecord:{
 			responseObj.setMethodName("transferRecord");
 			responseObj.setRecordTransfered(serverObj.transferRecord(reqObj.getManagerID(), reqObj.getRecordID(), reqObj.getLocation()));
 			return responseObj;

@@ -19,13 +19,18 @@ public class ServerReplica implements Runnable{
 	private int replicaPorts[];
 	private ClinicServer serverObjects[];
 	private FIFO fifoObj;
+	public static int lastProcessed;
 	Request reqObj;
 
 	public ServerReplica(int myReplicaPort, int replicaPorts[], ClinicServer serverObjects[], FIFO fifoObj){
 		this.myReplicaPort = myReplicaPort;
 		this.replicaPorts = new int[replicaPorts.length];
 		this.serverObjects = new ClinicServer[serverObjects.length];
+		lastProcessed = 0;
 
+		/*Debug: in ServerReplica ctor */
+		System.out.println("Debug: In ServerReplica ctor myReplicaPort: "+ myReplicaPort);
+		
 		for(int i =0; i<replicaPorts.length; i++){
 			this.replicaPorts[i] = replicaPorts[i];
 		}
@@ -38,6 +43,7 @@ public class ServerReplica implements Runnable{
 
 		try {
 			replicaSocket = new DatagramSocket(myReplicaPort);
+			System.out.println("Debug: In ServerReplica ctor after replicaSocekt: ");
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,6 +52,7 @@ public class ServerReplica implements Runnable{
 
 	public void run(){
 		listen();
+		System.out.println("Debug: In run of ServerReplica");
 	}
 	public ClinicServer getClinicObject(String location){
 
@@ -61,13 +68,14 @@ public class ServerReplica implements Runnable{
 		ServerReplicaHelper serverReplicaHelperObj = null;
 
 		while(true){
-			byte[] buf = new byte[256];
+			byte[] buf = new byte[3000];
 			requestPacket = new DatagramPacket(buf, buf.length);
 
 			try {
 				replicaSocket.receive(requestPacket);
-
+				System.out.println("Debug: In ServerReplica priting requestPacket: "+requestPacket);
 				serverReplicaHelperObj = new ServerReplicaHelper(this,requestPacket);
+				System.out.println("Debug: In ServerReplica after creating object of SRHelper");
 				Thread thread  = new Thread(serverReplicaHelperObj); 
 				thread.start();
 

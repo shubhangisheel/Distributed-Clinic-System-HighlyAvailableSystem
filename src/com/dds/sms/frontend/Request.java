@@ -33,6 +33,7 @@ public class Request implements Serializable{
 		this.location = loc;
 		this.methodName = methodName;
 		this.clinicLocation = clinicLocation;
+		System.out.println("Debug: In Request ctor: requestID: and name is "+RequestID + fName);
 	}
 	
 	public Request(int RequestID,String methodName,String fName, String lName, String desig,String stat_Date, String stat, String clinicLocation){

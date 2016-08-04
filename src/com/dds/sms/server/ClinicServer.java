@@ -1,8 +1,5 @@
 package com.dds.sms.server;
 
-import ClinicServerIDLInterface.ClinicServerIDLInterfacePOA;
-
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +16,7 @@ import com.dds.sms.datatypes.*;
 import com.dds.sms.udpcommunication.Listener;
 import com.dds.sms.udpcommunication.UDPClientServer;
 
-public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnable {
+public class ClinicServer implements Runnable {
 
 	private int num_Of_Records;
 	private int recordIDCounter;
@@ -29,6 +26,11 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 	private ArrayList<String> managers;
 	private FileWriter logFile;
 	private FileWriter managerFile;
+	
+	/*ENUM*/
+	private enum switchFunc{
+		address, firstName, lastName,location, phone, specialization, designation, status,status_Date  
+	}
 
 	/* Creating Hashmap of 26 alphabets (Key) and objects of DR and NR(List)*/
 	private HashMap <Character , ArrayList<Record>> clinicDatabase; 
@@ -38,7 +40,7 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 	NurseRecord objNR;
 
 	/*Constructor*/
-	public ClinicServer(String location,int rmiRegisteryPort, int portNumber) {
+	public ClinicServer(String location,int rmiRegisteryPort, int portNumber) throws RemoteException{
 
 		this.location = location;
 		this.portNumber = portNumber;
@@ -67,16 +69,16 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 		String message = location + " server created at " + Calendar.getInstance().getTime() 
 				+ "and a corresponding remote object registered with RMI Registry" + "\n" ;
 
-		/*Creating server logs*/
-
-		String fileName = location + "_log" + ".txt" ;
-		try {
-			logFile = new FileWriter ( fileName ) ;
-			logFile.write(message + "\n");
-			logFile.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		/*Creating server logs*/
+//
+//		String fileName = location + "_log" + ".txt" ;
+//		try {
+//			logFile = new FileWriter ( fileName ) ;
+//			logFile.write(message + System.lineSeparator());
+//			logFile.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	/*Getters and Setters*/
@@ -121,7 +123,7 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 		return clinicDatabase;
 	}
 
-	@Override
+	
 	/*Function to create a doctor record. Input: Doctor details, Output: Doctor obj, Updated log file*/
 	public boolean createDRecord (String fName, String lName, String add, String phn, String spclztn, String loc){
 
@@ -268,17 +270,19 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 		/*SwitchCase to handle different field names*/
 
 		synchronized (editObj){
+			
+			/*ENUM*/
+			switchFunc switchFuncObj = switchFunc.valueOf(fieldName);
 
+			switch(switchFuncObj){
 
-			switch(fieldName){
-
-			case "address":{
+			case address:{
 				((DoctorRecord) editObj).setAddress(newValue);
 				flag = true;
 				break;
 			}
 
-			case "firstName":{
+			case firstName:{
 				if(editObj.getRecordID().contains("DR")){
 					((DoctorRecord) editObj).setFirstName(newValue);
 					//			System.out.println(((DoctorRecord) editObj).getFirstName());
@@ -291,42 +295,42 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 				break;
 			}
 
-			case "lastName":{
+			case lastName:{
 				flag =updateLastName(editObj,newValue);
 				break;
 			}
 
-			case "location":{	
+			case location:{	
 				((DoctorRecord) editObj).setLocation(newValue);
 				flag = true;
 				break;
 			}
 
-			case "phone":{
+			case phone:{
 				((DoctorRecord) editObj).setPhone(newValue);
 				flag = true;
 				break;
 			}
 
-			case "specialization":{
+			case specialization:{
 				((DoctorRecord) editObj).setSpecialization(newValue);
 				flag = true;
 				break;
 			}
 
-			case "designation":{
+			case designation:{
 				((NurseRecord) editObj).setDesignation(newValue);
 				flag = true;
 				break;
 			}
 
-			case "status":{
+			case status:{
 				((NurseRecord) editObj).setStatus(newValue);
 				flag = true;
 				break;
 			}
 
-			case "status_Date":{
+			case status_Date:{
 				((NurseRecord) editObj).setStatus_Date(newValue);
 				flag = true;
 				break;
@@ -463,12 +467,12 @@ public class ClinicServer extends ClinicServerIDLInterfacePOA implements Runnabl
 	}
 
 	public synchronized void writeLog ( FileWriter obj, String message ) {
-		try {
-			obj.write( message + "\n" ) ;
-			obj.flush();
-		} catch ( IOException e ) {
-			System.out.println( "Could not write the following string to log for " + location + " " + e.getMessage() ) ;
-		}
+//		try {
+//			obj.write( message + System.lineSeparator() ) ;
+//			obj.flush();
+//		} catch ( IOException e ) {
+//			System.out.println( "Could not write the following string to log for " + location + " " + e.getMessage() ) ;
+//		}
 	}
 
 	/*Function to check recordID exists-ASN2*/

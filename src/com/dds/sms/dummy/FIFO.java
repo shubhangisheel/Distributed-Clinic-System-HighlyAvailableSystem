@@ -8,11 +8,11 @@ import com.dds.sms.frontend.Response;
 public class FIFO implements Runnable {
 	
 	private DatagramPacket RequestPacket;
-	private Response response[];
+	private Response response;
 	
 	public FIFO(DatagramPacket RequestPacket){
 		this.RequestPacket = RequestPacket;
-		response = new Response[2];
+		response = new Response();
 	}
 	
 	public FIFO(){
@@ -23,10 +23,10 @@ public class FIFO implements Runnable {
 	
 	public void run(){
 		broadcast(getRequestPacket());
-		Response response[] =recieveResponse();
+		Response response =recieveResponse();
 		
 	}
-	private Response[] recieveResponse() {
+	private Response recieveResponse() {
 		return null;
 	}
 	public DatagramPacket getRequestPacket() {
@@ -35,10 +35,10 @@ public class FIFO implements Runnable {
 	public void setRequestPacket(DatagramPacket requestPacket) {
 		RequestPacket = requestPacket;
 	}
-	public Response[] getResponse() {
+	public Response getResponse() {
 		return response;
 	}
-	public void setResponse(Response[] response) {
+	public void setResponse(Response response) {
 		this.response = response;
 	}
 	

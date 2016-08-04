@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
 import java.net.DatagramPacket;
@@ -31,17 +32,27 @@ public class FECommunication {
 	public FECommunication(Request reqObj){
 		this.reqObj = reqObj;
 		bufferList = new LinkedList();
+		try {
+			socket = new DatagramSocket();
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Debug: In FEComunnication ctor printing rcvd data: requestID : "+reqObj.getRequestID() +reqObj.getFirstName());
 	}
 	
+	//TODO
 	public int getGroupLeader(){
-		return 0;
+		//return 0;
+		return 5200;// Debug: 1 server
 	}
 
 	public void send(){
 
+		System.out.println("Debug: In send() buffer outside if condition, buffer size before addition: "+bufferList.size());
 		/*until list is full*/
 		if(bufferList.size()<=50){
 			bufferList.add(reqObj);
+			System.out.println("Debug: In send() buffer if condition, buffer size after addition: "+bufferList.size());
 		}
 		/*if buffer becomes full, the entire buffer is cleared and filled with recent 50 request objects*/
 		else{
@@ -50,8 +61,9 @@ public class FECommunication {
 		}
 
 		ByteArrayOutputStream bs = null;
-		ObjectOutputStream os = null;
+		ObjectOutput os = null;
 		int groupLeaderPort = getGroupLeader();
+		System.out.println("Debug: In send() in groupLEadeRPort: "+groupLeaderPort);
 
 		try {
 			bs = new ByteArrayOutputStream();
@@ -59,9 +71,13 @@ public class FECommunication {
 			os.writeObject(reqObj);
 
 			byte[] sendBuffer = bs.toByteArray();
+			
+			System.out.println("Debug: In send() of Front end priniting requestPakcet"+sendBuffer);
+			
 			DatagramPacket requestPacket = new DatagramPacket(sendBuffer, sendBuffer.length, InetAddress.getLocalHost(), groupLeaderPort);
 			socket.send(requestPacket);
-
+			System.out.println("Debug: In send, after socket.send");
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
