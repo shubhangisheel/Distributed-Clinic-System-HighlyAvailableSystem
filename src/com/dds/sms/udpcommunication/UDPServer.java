@@ -73,10 +73,7 @@ public class UDPServer extends Communication implements Runnable{
 				socketResult.send(packetResult);
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally{
-				socketResult.close();
 			}
-
 		}
 
 		/* 2. When functionName is createDRecord*/
@@ -119,10 +116,8 @@ public class UDPServer extends Communication implements Runnable{
 				socketResult.send(packetResult);
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally{
-				socketResult.close();
-			}
 		}
+			}
 
 		else if(functionName.equals("createNRecord")){
 
@@ -160,9 +155,7 @@ public class UDPServer extends Communication implements Runnable{
 				socketResult.send(packetResult);
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally{
-				socketResult.close();
-			}
+			} 
 
 		}
 		/* ******************************************************EDITING FOR ASN2********************************************************************* */

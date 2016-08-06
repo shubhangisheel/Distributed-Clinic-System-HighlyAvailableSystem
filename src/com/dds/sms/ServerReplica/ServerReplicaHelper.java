@@ -42,6 +42,7 @@ public class ServerReplicaHelper implements Runnable{
 			is = new ObjectInputStream(bs);
 			System.out.println("In SRH ctor requestpacket: "+ requestPacket);
 			reqObj = (Request)is.readObject();
+			System.out.println("Debug: fieldname "+reqObj.getFieldName());
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -312,7 +313,7 @@ public class ServerReplicaHelper implements Runnable{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 	}
 
 	/*function for non-group leader process*/
@@ -362,7 +363,7 @@ public class ServerReplicaHelper implements Runnable{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 
 	}
 

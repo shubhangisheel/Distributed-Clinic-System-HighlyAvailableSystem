@@ -95,12 +95,12 @@ public class UDPClientServer extends Communication implements Runnable {
 				/*if else condition to manage different clinic locations*/
 				if(server.getPortNumber() == 2525){
 					DatagramPacket packetRequest1 = new DatagramPacket(bufRequest, bufRequest.length, InetAddress.getLocalHost(), 3030);
-					System.out.println("Debug: UDPCS: sending packet to "+ packetRequest1.getAddress() +" and port 0 "+packetRequest1.getPort()+" from server "+server.getLocation());
 					socketRequest.send(packetRequest1);
+					System.out.println("Debug: UDPCS: sending packet to "+ packetRequest1.getAddress() +" and port 0 "+packetRequest1.getPort()+" from server "+server.getLocation());
 
 					DatagramPacket packetRequest2 = new DatagramPacket(bufRequest, bufRequest.length, InetAddress.getLocalHost(), 3535);
-					System.out.println("Debug: UDPCS: sending packet to "+ packetRequest2.getAddress() +" and port 0 "+packetRequest2.getPort()+" from server "+server.getLocation());
 					socketRequest.send(packetRequest2);
+					System.out.println("Debug: UDPCS: sending packet to "+ packetRequest2.getAddress() +" and port 0 "+packetRequest2.getPort()+" from server "+server.getLocation());
 
 				}
 				else if(server.getPortNumber() == 3030){
@@ -219,7 +219,7 @@ public class UDPClientServer extends Communication implements Runnable {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			} 
 			
 		}
 	}		

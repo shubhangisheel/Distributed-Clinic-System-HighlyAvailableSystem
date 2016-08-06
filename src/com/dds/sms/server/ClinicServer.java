@@ -63,7 +63,7 @@ public class ClinicServer implements Runnable {
 			managers.add(s);
 			System.out.println(managers.get(i));
 		}
-
+		
 
 		/*Message for server logs*/
 		String message = location + " server created at " + Calendar.getInstance().getTime() 

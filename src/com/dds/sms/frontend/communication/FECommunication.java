@@ -37,7 +37,7 @@ public class FECommunication {
 			socket = new DatagramSocket();
 		} catch (SocketException e) {
 			e.printStackTrace();
-		}
+		} 
 		System.out.println("Debug: In FEComunnication ctor printing rcvd data: requestID : "+reqObj.getRequestID() +reqObj.getFirstName());
 	}
 	
@@ -82,7 +82,7 @@ public class FECommunication {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 
 
 	}
@@ -112,7 +112,7 @@ public class FECommunication {
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 
 		return responseObj;
 
